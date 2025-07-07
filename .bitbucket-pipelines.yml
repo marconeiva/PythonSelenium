@@ -1,0 +1,14 @@
+image: python:3.11
+
+pipelines:
+  default:
+    - step:
+        name: Run Selenium Tests
+        caches:
+          - pip
+        script:
+          - apt-get update && apt-get install -y chromium chromium-driver
+          - pip install -r requirements.txt
+          - pytest --html=report.html tests/
+        artifacts:
+          - report.html
