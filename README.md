@@ -1,29 +1,36 @@
-# README #
+# 🧪 Sample project that does a PS5 Search Test at Amazon with (Selenium + Pytest + Docker + CI)
 
-This README would normally document whatever steps are necessary to get your application up and running.
+This project automates the validation of Amazon search functionality for the keyword **"ps5 console"** using:
 
-### What is this repository for? ###
+- ✅ **Python 3.11**
+- 🔍 **Selenium WebDriver** with headless **Chromium**
+- 🧪 **Pytest** for test management and HTML reporting
+- 🐳 **Docker** for cross-platform test execution
+- 🔁 **Bitbucket Pipelines** for continuous integration
 
-* Quick summary
-* Version
-* [Learn Markdown](https://bitbucket.org/tutorials/markdowndemo)
+---
 
-### How do I get set up? ###
+## 🔍 What It Does
 
-* Summary of set up
-* Configuration
-* Dependencies
-* Database configuration
-* How to run tests
-* Deployment instructions
+The test script opens [amazon.com](https://www.amazon.com/-/en/), simulates a user searching for **PS5 console**, and verifies that relevant product titles appear in the results.
 
-### Contribution guidelines ###
+It handles:
+- Location/cookie modals
+- Headless scrolling for lazy-loaded items
+- CAPTCHA detection (to flag bot blocks)
+- Screenshot + HTML dump for CI artifacts
 
-* Writing tests
-* Code review
-* Other guidelines
+---
 
-### Who do I talk to? ###
 
-* Repo owner or admin
-* Other community or team contact
+---
+
+## 🚀 Getting Started Locally
+
+### 1. Build and run in Docker
+
+```bash
+docker build -t selenium-test-image .
+docker run --rm -v $(pwd):/tests -w /tests selenium-test-image
+
+
