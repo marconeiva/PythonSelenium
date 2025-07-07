@@ -6,20 +6,23 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
+import tempfile
 
 
 @pytest.fixture
 def driver():
+    user_data_dir = tempfile.mkdtemp()
+
     options = Options()
-    # NOTE: No --headless
+    options.add_argument(f"--user-data-dir={user_data_dir}")  # 💡 Unique per run
     options.add_argument("--disable-blink-features=AutomationControlled")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--window-size=1920,1080")
-    options.add_argument(
-        "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36")
+    options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36")
 
     driver = webdriver.Chrome(options=options)
+
     driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
         "source": """
           Object.defineProperty(navigator, 'webdriver', {
@@ -29,6 +32,7 @@ def driver():
     })
     yield driver
     driver.quit()
+
 
 
 def test_search_ps5_on_amazon(driver):
