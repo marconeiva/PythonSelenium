@@ -28,36 +28,51 @@ def driver():
 
 
 def test_search_ps5_on_amazon(driver):
-    driver.get("https://www.amazon.com/")
+    driver.get("https://www.amazon.com/-/en/")  # Force US-English
 
     wait = WebDriverWait(driver, 15)
 
-    # Bypass cookie banner (optional)
+    # Accept cookie banner if present
     try:
         cookie_btn = wait.until(EC.element_to_be_clickable((By.ID, "sp-cc-accept")))
         cookie_btn.click()
     except:
-        pass  # no banner
+        pass  # No cookie banner
 
+    # Perform search
     search_box = wait.until(EC.presence_of_element_located((By.ID, "twotabsearchtextbox")))
     search_box.send_keys("ps5 console")
     search_box.send_keys(Keys.RETURN)
 
+    # Wait for results container
     wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "div.s-main-slot")))
 
-    # Scroll in steps to trigger lazy loading
+    # Simulate user scroll to trigger lazy loading
     for _ in range(3):
         driver.execute_script("window.scrollBy(0, window.innerHeight);")
         time.sleep(2)
 
-    # Target actual product titles
+    # Locate actual product titles
     results = driver.find_elements(By.CSS_SELECTOR, "h2 span.a-text-normal")
-    driver.save_screenshot("screenshot.png")
 
+    # Save screenshot and result HTML for pipeline artifacts
+    driver.save_screenshot("screenshot.png")
+    try:
+        main_slot = driver.find_element(By.CSS_SELECTOR, "div.s-main-slot")
+        with open("main_slot.html", "w", encoding="utf-8") as f:
+            f.write(main_slot.get_attribute("outerHTML"))
+    except:
+        print("❗ Could not dump main_slot HTML.")
+
+    # Matching logic with fallback keywords
+    keywords = ["ps5", "playstation 5", "sony ps5"]
+    matches = [r.text for r in results if any(k in r.text.lower() for k in keywords)]
+
+    # Debug output
     for i, r in enumerate(results):
         text = r.text.strip()
         print(f"[{i}] {text}")
-        if "ps5" in text.lower():
+        if any(k in text.lower() for k in keywords):
             print("✅ MATCH FOUND")
 
-    assert any("ps5" in r.text.lower() for r in results), "❌ No PS5-related titles found!"
+    assert matches, "❌ No product titles matched keywords"

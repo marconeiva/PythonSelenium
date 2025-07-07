@@ -10,3 +10,4 @@ pipelines:
         artifacts:
           - report.html
           - screenshot.png
+          - main_slot.html
