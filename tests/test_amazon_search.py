@@ -32,12 +32,12 @@ def test_search_ps5_on_amazon(driver):
 
     wait = WebDriverWait(driver, 15)
 
-    # Bypass cookie banner (optional, if shown)
+    # Bypass cookie banner (optional)
     try:
         cookie_btn = wait.until(EC.element_to_be_clickable((By.ID, "sp-cc-accept")))
         cookie_btn.click()
     except:
-        pass  # no cookie banner
+        pass  # no banner
 
     search_box = wait.until(EC.presence_of_element_located((By.ID, "twotabsearchtextbox")))
     search_box.send_keys("ps5 console")
@@ -45,14 +45,19 @@ def test_search_ps5_on_amazon(driver):
 
     wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "div.s-main-slot")))
 
-    # Simulate scroll and wait for JS-rendered content
-    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-    time.sleep(3)
+    # Scroll in steps to trigger lazy loading
+    for _ in range(3):
+        driver.execute_script("window.scrollBy(0, window.innerHeight);")
+        time.sleep(2)
 
-    results = driver.find_elements(By.CSS_SELECTOR, "span.a-text-normal")
+    # Target actual product titles
+    results = driver.find_elements(By.CSS_SELECTOR, "h2 span.a-text-normal")
     driver.save_screenshot("screenshot.png")
 
     for i, r in enumerate(results):
-        print(f"[{i}] {r.text.strip()}")
+        text = r.text.strip()
+        print(f"[{i}] {text}")
+        if "ps5" in text.lower():
+            print("✅ MATCH FOUND")
 
     assert any("ps5" in r.text.lower() for r in results), "❌ No PS5-related titles found!"
