@@ -25,9 +25,20 @@ def test_search_ps5_on_amazon(driver):
         pass
 
     # Wait and interact with the search bar
+    # Wait and scroll to search box
     search_box = wait.until(EC.element_to_be_clickable((By.ID, "twotabsearchtextbox")))
     driver.execute_script("arguments[0].scrollIntoView(true);", search_box)
-    time.sleep(0.5)
+    driver.execute_script("arguments[0].focus();", search_box)
+    time.sleep(1)
+
+    # Dismiss possible overlays
+    try:
+        driver.switch_to.active_element.send_keys(Keys.ESCAPE)
+        time.sleep(1)
+    except:
+        pass
+
+    # Now interact
     search_box.clear()
     search_box.send_keys("ps5 console")
     search_box.send_keys(Keys.RETURN)
