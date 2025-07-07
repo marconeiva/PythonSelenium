@@ -5,40 +5,58 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+import time
+
 
 @pytest.fixture
 def driver():
     options = Options()
-    options.add_argument("--headless")
+    # NOTE: No --headless
+    options.add_argument("--disable-blink-features=AutomationControlled")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--window-size=1920,1080")
-    options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36")
+    options.add_argument(
+        "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36")
 
     driver = webdriver.Chrome(options=options)
+    driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
+        "source": """
+          Object.defineProperty(navigator, 'webdriver', {
+            get: () => undefined
+          })
+        """
+    })
     yield driver
     driver.quit()
 
+
 def test_search_ps5_on_amazon(driver):
-    driver.get("https://www.amazon.com/-/en")
+    driver.get("https://www.amazon.com/")
 
     wait = WebDriverWait(driver, 15)
+
+    # Bypass cookie banner (optional, if shown)
+    try:
+        cookie_btn = wait.until(EC.element_to_be_clickable((By.ID, "sp-cc-accept")))
+        cookie_btn.click()
+    except:
+        pass  # no cookie banner
+
     search_box = wait.until(EC.presence_of_element_located((By.ID, "twotabsearchtextbox")))
     search_box.send_keys("ps5 console")
     search_box.send_keys(Keys.RETURN)
 
-    # Wait for result block
     wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "div.s-main-slot")))
 
-    # Collect result titles
+    # Simulate scroll and wait for JS-rendered content
+    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+    time.sleep(3)
+
     results = driver.find_elements(By.CSS_SELECTOR, "span.a-text-normal")
-    driver.save_screenshot("screenshot.png")  # Save for debugging
-    print(f"Found {len(results)} result elements")
+    driver.save_screenshot("screenshot.png")
 
-    for idx, result in enumerate(results):
-        print(f"[{idx}] {result.text.strip()}")
+    for i, r in enumerate(results):
+        print(f"[{i}] {r.text.strip()}")
 
-    # Now test more loosely for "ps5"
-    matched_results = [r.text for r in results if "ps5" in r.text.lower()]
-    assert matched_results, "❌ No visible PS5-related titles found in results"
-    print(f"✅ Found {len(matched_results)} matching PS5 result(s)")
+    assert any("ps5" in r.text.lower() for r in results), "❌ No PS5-related titles found!"

@@ -3,14 +3,16 @@ image: python:3.11
 pipelines:
   default:
     - step:
-        name: Run Selenium Tests
+        name: Run Amazon Selenium Test
         caches:
           - pip
         script:
-          - apt-get update && apt-get install -y chromium chromium-driver fonts-liberation
+          - apt-get update
+          - apt-get install -y chromium chromium-driver xvfb x11-utils
           - pip install -r requirements.txt
+          - Xvfb :99 -screen 0 1920x1080x24 &  # Run virtual display
+          - export DISPLAY=:99
           - pytest --html=report.html tests/
         artifacts:
           - report.html
           - screenshot.png
-
