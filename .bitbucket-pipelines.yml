@@ -14,7 +14,7 @@ pipelines:
               -v $(pwd):/tests \
               -w /tests \
               selenium-test-image \
-              pytest --html=report.html tests/
+              pytest --html=report.html --capture=tee-sys tests/
         artifacts:
           - report.html
           - screenshot.png
