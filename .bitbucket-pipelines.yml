@@ -3,10 +3,18 @@ image: atlassian/default-image:3
 pipelines:
   default:
     - step:
-        name: Run Selenium in Docker
+        name: Build Docker image & run Selenium test
+        services:
+          - docker
+        caches:
+          - docker
         script:
-          - docker build -t chrome-selenium .
-          - docker run -e DISPLAY=:99 -v $PWD:/tests chrome-selenium pytest --html=report.html tests/
+          - docker build -t selenium-test-image .
+          - docker run --rm \
+              -v $(pwd):/tests \
+              -w /tests \
+              selenium-test-image \
+              pytest --html=report.html tests/
         artifacts:
           - report.html
           - screenshot.png
