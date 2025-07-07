@@ -7,14 +7,16 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
 import tempfile
-
+import shutil
+import os
 
 @pytest.fixture
 def driver():
-    user_data_dir = tempfile.mkdtemp()
+    # Create a fully isolated, temporary user data directory
+    user_data_dir = tempfile.mkdtemp(prefix="chrome-user-data-")
 
     options = Options()
-    options.add_argument(f"--user-data-dir={user_data_dir}")  # 💡 Unique per run
+    options.add_argument(f"--user-data-dir={user_data_dir}")
     options.add_argument("--disable-blink-features=AutomationControlled")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
@@ -23,15 +25,21 @@ def driver():
 
     driver = webdriver.Chrome(options=options)
 
+    # Bypass detection of headless automation
     driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
         "source": """
-          Object.defineProperty(navigator, 'webdriver', {
-            get: () => undefined
-          })
+            Object.defineProperty(navigator, 'webdriver', {
+                get: () => undefined
+            });
         """
     })
+
     yield driver
+
+    # Cleanup
     driver.quit()
+    shutil.rmtree(user_data_dir, ignore_errors=True)
+
 
 
 
