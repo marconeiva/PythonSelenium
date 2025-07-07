@@ -12,3 +12,5 @@ pipelines:
           - pytest --html=report.html tests/
         artifacts:
           - report.html
+          - screenshot.png
+
